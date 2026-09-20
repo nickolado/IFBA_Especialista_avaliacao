@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Locação Residencial</title>
+    <link rel="stylesheet" href="estilo.css">
+    <script src="painel.js" defer></script>
+</head>
+<body>
+<header>
+    <div class="marca">LR <span>IMOBILIÁRIA</span></div>
+    <p>PAINEL DE ATENDIMENTO</p>
+    <h1>Locação Residencial<span>.</span></h1>
+    <div class="subtitulo">Imóveis, pedidos e a experiência de quem já alugou.</div>
+</header>
+<main>
+    <div class="faixa"><span>Visão geral da imobiliária</span><small>Atualização automática a cada 5 segundos</small></div>
+    <section class="indicadores" aria-label="Resumo">
+        <article><p>IMÓVEIS DISPONÍVEIS</p><strong id="total-imoveis">—</strong><small>prontos para uma nova locação</small></article>
+        <article><p>PEDIDOS PENDENTES</p><strong id="total-pedidos">—</strong><small>aguardando análise da equipe</small></article>
+        <article><p>MÉDIA DAS AVALIAÇÕES</p><strong id="total-avaliacoes">—</strong><small>notas de 1 a 5</small></article>
+    </section>
+    <section class="painel" aria-labelledby="titulo-imoveis">
+        <div class="titulo"><div><p>01 / DISPONIBILIDADE</p><h2 id="titulo-imoveis">Imóveis</h2></div><span id="estado-imoveis" role="status">Carregando…</span></div>
+        <div class="tabela" id="lista-imoveis"></div>
+        <details><summary>Cadastrar imóvel</summary>
+            <form id="form-imovel">
+                <label>Descrição<input name="descricao" required maxlength="200"></label>
+                <label>Bairro<input name="bairro" required maxlength="80"></label>
+                <label>Tipo<select name="tipo"><option>apartamento</option><option>casa</option><option>kitnet</option></select></label>
+                <label>Quartos<input name="quartos" type="number" min="0" max="50" required></label>
+                <label>Valor mensal (R$)<input name="valor_mensal" type="number" min="0.01" max="99999999.99" step="0.01" required></label>
+                <button>Cadastrar imóvel</button>
+            </form><p id="mensagem-imovel" role="status"></p>
+        </details>
+    </section>
+    <section class="painel" aria-labelledby="titulo-pedidos">
+        <div class="titulo"><div><p>02 / ACOMPANHAMENTO</p><h2 id="titulo-pedidos">Pedidos de locação</h2></div><span id="estado-pedidos" role="status">Carregando…</span></div>
+        <div class="tabela" id="lista-pedidos"></div>
+        <p id="mensagem-situacao" role="status"></p>
+        <details><summary>Registrar pedido</summary>
+            <p class="ajuda">Um pedido pendente registra interesse e não garante a reserva do imóvel.</p>
+            <form id="form-pedido">
+                <label>Cliente<input name="cliente" required maxlength="120"></label>
+                <label>Número do imóvel<input name="imovel_id" type="number" min="1" step="1" required></label>
+                <button>Registrar pedido</button>
+            </form><p id="mensagem-pedido" role="status"></p>
+        </details>
+    </section>
+    <section class="painel" aria-labelledby="titulo-avaliacoes">
+        <div class="titulo"><div><p>03 / EXPERIÊNCIA</p><h2 id="titulo-avaliacoes">Avaliações</h2></div><span id="estado-avaliacoes" role="status">Carregando…</span></div>
+        <div class="tabela" id="lista-avaliacoes"></div>
+        <details><summary>Registrar avaliação</summary>
+            <p class="ajuda">A equipe registra o comentário do cliente. Cada locação concluída permite uma avaliação.</p>
+            <form id="form-avaliacao">
+                <label>Número do pedido concluído<input name="pedido_id" type="number" min="1" step="1" required></label>
+                <label>Nota<select name="nota"><option>5</option><option>4</option><option>3</option><option>2</option><option>1</option></select></label>
+                <label class="largo">Comentário<input name="comentario" required maxlength="500"></label>
+                <button>Registrar avaliação</button>
+            </form><p id="mensagem-avaliacao" role="status"></p>
+        </details>
+    </section>
+    <footer>Locação Residencial · Projeto acadêmico de SOA · Dados fictícios</footer>
+</main>
+</body>
+</html>

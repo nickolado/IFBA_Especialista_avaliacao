@@ -1,0 +1,2 @@
+-r servicos/requirements.txt
+-r mcp/requirements.txt

@@ -1,0 +1,99 @@
+name: locacao-residencial
+
+services:
+  dados:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: locacao
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: ${SENHA_BANCO:-admin}
+    volumes:
+      - dados-locacao:/var/lib/postgresql/data
+      - ./servicos/locacao.sql:/docker-entrypoint-initdb.d/locacao.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d locacao"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  imoveis:
+    build: ./servicos
+    command: python imoveis/servico.py
+    restart: unless-stopped
+    environment:
+      SENHA_BANCO: ${SENHA_BANCO:-admin}
+    ports: ["127.0.0.1:7001:5000"]
+    depends_on:
+      dados:
+        condition: service_healthy
+
+  pedidos:
+    build: ./servicos
+    command: python pedidos/servico.py
+    restart: unless-stopped
+    environment:
+      SENHA_BANCO: ${SENHA_BANCO:-admin}
+    ports: ["127.0.0.1:7002:5000"]
+    depends_on:
+      dados:
+        condition: service_healthy
+
+  avaliacoes:
+    build: ./servicos
+    command: python avaliacoes/servico.py
+    restart: unless-stopped
+    environment:
+      SENHA_BANCO: ${SENHA_BANCO:-admin}
+    ports: ["127.0.0.1:7003:5000"]
+    depends_on:
+      dados:
+        condition: service_healthy
+
+  imoveis-mcp:
+    build: ./mcp
+    command: python imoveis/ferramentas.py
+    restart: unless-stopped
+    ports: ["127.0.0.1:8001:8000"]
+
+  pedidos-mcp:
+    build: ./mcp
+    command: python pedidos/ferramentas.py
+    restart: unless-stopped
+    ports: ["127.0.0.1:8002:8000"]
+
+  avaliacoes-mcp:
+    build: ./mcp
+    command: python avaliacoes/ferramentas.py
+    restart: unless-stopped
+    ports: ["127.0.0.1:8003:8000"]
+
+  dashboard:
+    image: python:3.12-slim
+    working_dir: /dashboard
+    command: python -m http.server 8088
+    restart: unless-stopped
+    ports: ["127.0.0.1:8088:8088"]
+    volumes:
+      - ./dashboard:/dashboard:ro
+
+  chat:
+    build: ./mcp
+    command: python chat_ai.py
+    profiles: ["chat"]
+    stdin_open: true
+    tty: true
+    environment:
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      PROVEDOR_IA: ${PROVEDOR_IA:-openai}
+      MODELO_IA: ${MODELO_IA:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      URL_IA: ${URL_IA:-}
+      CHAVE_API_IA: ${CHAVE_API_IA:-}
+      MCP_IMOVEIS: http://imoveis-mcp:8000/mcp
+      MCP_PEDIDOS: http://pedidos-mcp:8000/mcp
+      MCP_AVALIACOES: http://avaliacoes-mcp:8000/mcp
+
+volumes:
+  dados-locacao:
