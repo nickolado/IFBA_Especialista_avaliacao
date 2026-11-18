@@ -23,11 +23,12 @@ def testar():
     servico_pedidos = carregar("pedidos")
     pedidos = servico_pedidos.test_client()
     avaliacoes = carregar("avaliacoes").test_client()
-    assert len(imoveis.get("/imoveis").json) == 6
+    assert len(imoveis.get("/imoveis").json) == 12
     assert imoveis.get("/imoveis/1").json["situacao"] == "disponivel"
     assert imoveis.get("/imoveis/2").json["situacao"] == "reservado"
     assert imoveis.get("/imoveis/3").json["situacao"] == "alugado"
-    assert len(pedidos.get("/pedidos/situacao/pendente").json) == 2
+    assert len(pedidos.get("/pedidos/situacao/pendente").json) == 4
+    assert len(avaliacoes.get("/avaliacoes").json) == 3
     assert avaliacoes.get("/avaliacoes/resumo").json[0]["media_nota"] == "5.00"
     for cliente, rota in [(imoveis, "/imoveis"), (pedidos, "/pedidos"), (avaliacoes, "/avaliacoes")]:
         for corpo in [[], None, {"nota": True}]:

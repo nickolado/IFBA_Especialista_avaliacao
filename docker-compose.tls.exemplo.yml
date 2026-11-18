@@ -1,0 +1,16 @@
+# Exemplo inativo. Aplicar somente com autorização para confiar na CA local.
+# O arquivo montado deve conter as CAs padrão mais a CA pública do ambiente.
+x-tls-local: &tls-local
+  environment:
+    SSL_CERT_FILE: /etc/ssl/certs/locacao-ca.pem
+  volumes:
+    - type: bind
+      source: ./.venv/ca-runtime.pem
+      target: /etc/ssl/certs/locacao-ca.pem
+      read_only: true
+      bind:
+        create_host_path: false
+
+services:
+  especialista: *tls-local
+  chat: *tls-local

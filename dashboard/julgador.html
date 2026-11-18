@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Notas, justificativas e evidências das avaliações do assistente de locação.">
+    <title>Notas do julgador · Locação Residencial v2</title>
+    <link rel="stylesheet" href="estilo.css">
+    <link rel="stylesheet" href="julgador.css">
+    <script src="julgador.js" defer></script>
+</head>
+<body class="pagina-julgador">
+<a class="pular" href="#conteudo">Pular para as notas</a>
+<header>
+    <div class="marca">LR <span>IMOBILIÁRIA</span></div>
+    <p>AVALIAÇÃO DO ASSISTENTE</p>
+    <h1>Notas do julgador<span>.</span></h1>
+    <div class="subtitulo">Veja o que foi avaliado, as notas recebidas e o motivo de cada resultado.</div>
+    <nav class="navegacao" aria-label="Navegação principal"><a href="index.html">Atendimento</a><a href="julgador.html" aria-current="page">Notas do julgador</a></nav>
+</header>
+<main id="conteudo">
+    <section class="painel escolha" aria-labelledby="titulo-rodada">
+        <div class="titulo"><div><p>01 / RODADA</p><h2 id="titulo-rodada">Relatório de avaliação</h2></div><button type="button" id="atualizar">Atualizar relatórios</button></div>
+        <label for="relatorio">Escolha uma execução<select id="relatorio" disabled><option>Carregando…</option></select></label>
+        <p id="estado" role="status" aria-live="polite">Buscando relatórios…</p>
+        <dl id="metadados" class="metadados" hidden></dl>
+    </section>
+
+    <div id="resultado" hidden>
+        <section class="indicadores resumo-julgador" aria-label="Resumo da rodada">
+            <article><p>CASOS AVALIADOS</p><strong id="total">—</strong><small>Total desta execução</small></article>
+            <article><p>APROVADOS</p><strong id="aprovados">—</strong><small>Notas e verificações aceitas</small></article>
+            <article><p>REPROVADOS COM NOTAS</p><strong id="reprovados">—</strong><small>Consulte os motivos do caso</small></article>
+            <article><p>SEM NOTAS VÁLIDAS</p><strong id="sem-notas">—</strong><small>Falha ou parecer inválido</small></article>
+        </section>
+        <p class="observacao">Uma nota alta não garante aprovação: o resultado também considera as verificações automáticas. Falhas de avaliação ficam sem nota, nunca com zero. Estas contagens não representam, sozinhas, a acurácia do assistente.</p>
+
+        <section class="painel" aria-labelledby="titulo-notas">
+            <div class="titulo"><div><p>02 / NOTAS POR CASO</p><h2 id="titulo-notas">Resultados da rodada</h2></div><label class="filtro">Mostrar<select id="filtro"><option value="todos">Todos os casos</option><option value="aprovado">Aprovados</option><option value="reprovado">Reprovados com notas</option><option value="sem_notas">Sem notas válidas</option></select></label></div>
+            <p id="contagem" class="legenda"></p>
+            <div class="tabela" tabindex="0" role="region" aria-label="Tabela de notas; role horizontalmente em telas pequenas">
+                <table>
+                    <caption>Notas de 1 a 5. O traço (—) indica que não há parecer válido.</caption>
+                    <thead><tr><th scope="col">Caso</th><th scope="col">Correção factual</th><th scope="col">Aderência</th><th scope="col">Justificativa</th><th scope="col">Clareza</th><th scope="col">Limites</th><th scope="col">Resultado</th><th scope="col">Detalhes</th></tr></thead>
+                    <tbody id="casos"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="painel detalhe" id="detalhe" aria-labelledby="titulo-caso" hidden>
+            <div class="titulo"><div><p>03 / LEITURA DO CASO</p><h2 id="titulo-caso" tabindex="-1"></h2></div><span id="situacao-caso"></span></div>
+            <p id="fonte-caso" class="legenda"></p>
+            <div id="falha-caso" class="aviso" hidden></div>
+            <h3>Parecer do juiz</h3><p id="parecer" class="texto-relatorio"></p>
+            <div class="checagens"><div><h3>Verificações automáticas</h3><div id="erros"></div></div><div><h3>Afirmações sem suporte</h3><div id="sem-suporte"></div></div></div>
+            <h3>Referência esperada</h3><p id="referencia" class="texto-relatorio"></p>
+            <h3>Perguntas, respostas e evidências</h3><div id="turnos"></div>
+        </section>
+    </div>
+</main>
+<footer>Locação Residencial v2 · Leitura dos relatórios salvos · Atualizar esta página não executa a IA</footer>
+</body>
+</html>

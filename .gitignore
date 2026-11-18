@@ -2,3 +2,15 @@
 .venv/
 __pycache__/
 *.pyc
+.cache-local/
+resultados/
+/docker-compose.override.yml
+/agents.md
+/AGENTS.md
+/PLAN.MD
+/ROTEIRO-VIDEO-V2.md
+/video-guia-v2/
+/entrega-capitulo-v2/
+*.pdf
+*.mp4
+*.zip

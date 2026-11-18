@@ -1,9 +1,7 @@
-# Locação Residencial
+# Locação Residencial v2 — Sistema Especialista com Julgador
 
 Sistema de locação residencial com **Arquitetura Orientada a Serviços (SOA)** para uma imobiliária.
-Três serviços REST em Python/Flask, três serviços MCP, dashboard e chat com OpenAI, Google ou Claude.
-Funções e variáveis em português e consultas SQL diretas.
-O domínio, os dados e as regras são de locação residencial.
+O assistente recomenda imóveis de acordo com orçamento, localização e quartos, consultando os dados via MCP. A v2 mantém os três serviços REST e acrescenta chat web, cache semântico e avaliação LLM-as-a-Judge. O domínio e os limites de atuação estão em `mcp/conhecimento.md`.
 
 ## Iniciar
 
@@ -15,8 +13,8 @@ docker compose up -d --build
 docker compose ps
 ```
 
-Abra **http://localhost:8088**. Não abra o HTML diretamente: o endereço acima permite as consultas CORS.
-A primeira inicialização baixa as imagens e cria o banco com seis imóveis, seis pedidos e uma avaliação.
+Abra **http://localhost:8088** e use o painel **Assistente de locação**. A API do chat roda em `localhost:8090` e aceita apenas as origens locais do painel. A chave fica no contêiner. O painel de cadastro e consulta continua funcionando sem chave de IA.
+A primeira inicialização baixa as imagens e cria o banco com doze imóveis, doze pedidos e três avaliações.
 Não precisa instalar Python no Windows nem criar uma rede Docker manualmente.
 
 Para o chat, edite o `.env` existente. Escolha o provedor, preencha a chave correspondente
@@ -47,7 +45,7 @@ O mesmo SDK usa os endpoints oficiais de cada provedor. A compatibilidade do Cla
 voltada a testes e comparação; recursos exclusivos de cada provedor não fazem parte deste chat.
 Assinaturas dos aplicativos de chat não substituem a chave e a cota da API.
 
-Construa a imagem do chat e inicie uma sessão. Ao trocar apenas a configuração no `.env`, basta iniciar outro chat:
+O chat web usa o serviço `especialista`. Após alterar o `.env`, execute `docker compose up -d especialista` para aplicar a configuração. O terminal permanece disponível:
 
 ```powershell
 docker compose build chat
@@ -56,6 +54,8 @@ docker compose run --rm chat
 
 Perguntas para experimentar:
 
+- Quero um apartamento de dois quartos no Centro até R$ 1.300. Qual você recomenda?
+- E se o meu limite subir para R$ 1.500? Compare as opções.
 - Quais imóveis estão disponíveis? Informe bairro, quartos e valor mensal.
 - Qual é a situação do pedido 1?
 - Quais pedidos estão pendentes?
@@ -66,6 +66,64 @@ Digite `sair` para encerrar. O chat mantém o histórico durante a execução.
 O chat apresenta ao modelo escolhido as ferramentas descobertas nos MCPs. A IA escolhe as consultas;
 o chat chama o MCP correspondente e devolve o resultado para a IA formular a resposta.
 As nove ferramentas têm nomes diferentes e só consultam dados.
+
+## Modelos locais e juiz independente
+
+Chat e julgador podem usar provedores e modelos diferentes. `PROVEDOR_JUIZ` aceita `openai`, `google`, `claude` ou `outro`. Quando vazio, herda o endpoint e a chave do chat; `MODELO_JUIZ` pode sobrescrever apenas o modelo. Com provedor explícito, o modelo vazio usa o padrão desse provedor. `CHAVE_API_JUIZ` permite uma credencial própria; quando omitida para um provedor conhecido, usa a chave correspondente (`GOOGLE_API_KEY`, por exemplo).
+
+Exemplo para manter o chat atual e usar Qwen no julgador, servido pelo Ollama instalado no computador:
+
+```dotenv
+PROVEDOR_JUIZ=outro
+MODELO_JUIZ=qwen3:8b
+URL_JUIZ=http://host.docker.internal:11434/v1
+CHAVE_API_JUIZ=ollama
+```
+
+Para usar Qwen também no chat:
+
+```dotenv
+PROVEDOR_IA=outro
+MODELO_IA=qwen3:8b
+URL_IA=http://host.docker.internal:11434/v1
+CHAVE_API_IA=ollama
+MODELO_EMBEDDING=
+```
+
+O servidor local e o modelo precisam estar instalados e acessíveis pelo contêiner. `host.docker.internal` acessa o computador pelo Docker Desktop; fora do Docker, use `localhost`. O valor `ollama` é fictício, exigido pelo cliente e ignorado pelo Ollama local. HTTP é aceito apenas para os endereços locais previstos; outros servidores precisam de HTTPS. O chat exige suporte a ferramentas, e o julgador exige saída JSON estruturada. A compatibilidade depende do modelo e do servidor. Os limites atuais são 25 segundos por chamada e 90 por turno; o carregamento de um modelo local pode excedê-los.
+
+Ao trocar o provedor do chat, deixe inicialmente `MODELO_EMBEDDING` vazio ou configure um modelo de embeddings disponível no novo endpoint; não reutilize o identificador do Google no Ollama. A troca apenas do juiz não altera os embeddings. Aplique mudanças do chat com `docker compose up -d especialista`; cada execução de `docker compose run --rm chat ...` já lê a configuração atual. O projeto não baixa modelos automaticamente.
+
+## Cache semântico
+
+Configure `MODELO_EMBEDDING` no `.env` com um modelo de embeddings disponível no endpoint compatível do provedor escolhido. Sem essa configuração, o chat funciona sem cache. `CACHE_LIMIAR` tem valor inicial `0.85` (ajuste com dados do seu modelo) e `CACHE_TTL` é expresso em segundos, com padrão de um dia. O volume `cache-especialista` mantém o SQLite entre reinícios. Erros no cache ou embeddings não impedem a resposta pelo LLM.
+
+O cache compartilhado usa embeddings e similaridade cosseno para as formulações públicas revisadas em `mcp/cache_semantico.py` e também adiciona dinamicamente perguntas gerais sobre o serviço (como dúvidas de escopo/venda) quando a resposta do assistente não aciona ferramentas MCP. Consultas sobre preços, disponibilidade, pedidos, avaliações e recomendações personalizadas passam sempre pelo fluxo normal com MCP.
+
+Quando ocorre `cache = hit` no chat web, a interface exibe que a resposta foi **recuperada do cache semântico** (com o percentual de similaridade) e **dispensa a chamada ao julgador**, evitando gasto e latência desnecessários para uma resposta já avaliada.
+
+Para demonstrar, pergunte **O que significa um pedido pendente?** (ou **Tem apartamentos para venda?**). Em seguida, repita a pergunta ou faça uma paráfrase (**O que quer dizer pedido pendente?**). Observe `cache=miss` na primeira e `cache=hit` na segunda tanto no painel quanto em `docker compose logs especialista`. Para limpar somente o cache, use `docker compose run --rm chat python cache_semantico.py limpar`.
+
+## Avaliação com o julgador
+
+O julgador faz uma chamada independente de avaliação e usa o mesmo núcleo do chat, com o cache desativado na bateria de casos. Configure o modelo e, opcionalmente, o provedor conforme a seção anterior; sem configuração própria, usa o modelo do assistente. Os casos tomam como referência os dados fictícios iniciais do SQL. Use um ambiente de demonstração com esses dados e revise o relatório antes de compartilhá-lo.
+
+Acesse [Notas do julgador](http://localhost:8088/julgador.html) pelo menu do painel. A página lê os relatórios JSON já salvos em `resultados/`: permite escolher a rodada, filtrar resultados e consultar as cinco notas, justificativas, verificações automáticas e evidências de cada caso. Atualizar a página não executa IA. Parecer inválido aparece como **sem notas válidas**, nunca como zero. As contagens preservam o resultado registrado e não representam, sozinhas, a acurácia do assistente.
+
+A avaliação funciona de duas formas:
+
+1. **Conversas do chat web (`resultados/chat-web.json`):** cada resposta concluída em `POST /chat` é avaliada pelo julgador com base nas evidências MCP consultadas e nas regras de `mcp/conhecimento.md`. O resultado é gravado e atualizado por sessão em `resultados/chat-web.json` pelo serviço `especialista`, ficando disponível imediatamente na aba **Notas do julgador** (`http://localhost:8088/julgador.html`). Falhas no julgamento ficam registradas como `sem_notas` sem interromper a resposta ao usuário.
+2. **Bateria reproduzível pelo terminal (`mcp/casos_julgador.json`):** o serviço `especialista` expõe `GET /julgador/relatorios` e `GET /julgador/relatorios/<nome>`. Apenas relatórios v2 válidos na raiz da pasta são listados; arquivos de medição do cache não entram na página. O contêiner `chat` também grava relatórios pelo comando abaixo.
+
+```powershell
+docker compose run --rm chat python julgador.py --caso orcamento_quartos --saida resultados/um-caso.json
+docker compose run --rm chat python julgador.py --todos --saida resultados/julgador.json
+docker compose run --rm chat python julgador.py --medir-cache --saida resultados/cache.json
+```
+
+Esses comandos fazem chamadas reais à API. Comece por um caso; o lote tem 13 casos e 14 turnos de inferência, além de até 13 julgamentos e consultas de ferramentas. O comando de cache usa SQLite temporário e mede duas paráfrases sem interferir no cache do painel. Os relatórios ficam em `resultados/` (ignorado no Git), com evidências, latências, verificações objetivas e notas. Saída `0` indica aprovação; `1` indica caso reprovado, avaliação inválida ou cache sem o hit esperado. Revise amostras manualmente: as notas do juiz podem variar e não substituem a inspeção das respostas.
+
+O juiz solicita saída JSON estruturada. O lote espera 20 segundos entre casos por padrão; use `--intervalo 25` ou aumente conforme a cota do provedor. Essa pausa não garante todas as cotas: cada caso pode chamar o modelo mais de uma vez, e o painel compartilha a mesma conta. Erros continuam registrados como falhas, sem aprovação automática nem repetição oculta.
 
 ## Pastas
 
@@ -78,6 +136,8 @@ locacao-residencial/
 ├── dashboard/
 │   ├── index.html
 │   ├── estilo.css
+│   ├── chat.js
+│   ├── julgador.html, julgador.css, julgador.js
 │   └── painel.js
 ├── servicos/
 │   ├── Dockerfile
@@ -93,6 +153,11 @@ locacao-residencial/
     ├── requirements.txt
     ├── acesso.py               # Acesso HTTP com limite de tempo
     ├── chat_ai.py
+    ├── chat_web.py, especialista.py, conhecimento.md
+    ├── cache_semantico.py
+    ├── julgador.py, casos_julgador.json
+    ├── relatorios_julgador.py, testar_relatorios.py
+    ├── testar_v2.py
     ├── testar_mcp.py
     ├── testar_chat.py          # IA simulada, sem chamada externa
     ├── imoveis/ferramentas.py
@@ -107,7 +172,10 @@ flowchart LR
     D[Dashboard] --> I[REST Imóveis :7001]
     D --> P[REST Pedidos :7002]
     D --> A[REST Avaliações :7003]
-    C[Chat AI] --> MI[MCP Imóveis :8001]
+    D --> C[Especialista :8090]
+    C --> L[LLM e embeddings]
+    C --> S[(Cache SQLite)]
+    C --> MI[MCP Imóveis :8001]
     C --> MP[MCP Pedidos :8002]
     C --> MA[MCP Avaliações :8003]
     MI --> I
@@ -220,15 +288,19 @@ Com a solução iniciada, rode:
 docker compose run --rm imoveis python testar.py
 docker compose run --rm chat python testar_mcp.py
 docker compose run --rm chat python testar_chat.py
+docker compose run --rm chat python testar_v2.py
+docker compose run --rm --no-deps especialista python testar_relatorios.py
 ```
 
 O primeiro teste cria um banco com nome aleatório e o remove ao terminar; não altera os dados do projeto.
 Ele verifica as regras, inclusive aprovações concorrentes. Exige que o usuário do PostgreSQL possa criar bancos,
 como o usuário inicial configurado pelo Compose.
 O segundo consulta as nove ferramentas MCP reais. Não chama a IA e não exige uma chave.
-O terceiro simula a IA e o MCP: verifica os três provedores, envio de ferramentas, histórico,
+O terceiro simula a IA e o MCP: verifica os três provedores conhecidos e um endpoint local compatível, configuração independente do juiz, envio de ferramentas, histórico,
 argumentos inválidos e falhas de consulta. Não exige chave, serviços iniciados ou acesso à internet.
 Esse teste não substitui a demonstração com uma chave real.
+O quarto verifica paráfrases, persistência e expiração do cache, atualização de disponibilidade, sessões web e validação do julgador, com IA e dados MCP simulados.
+O quinto verifica a API de relatórios com arquivos temporários: notas ausentes, resultados preservados, ordenação, arquivos inválidos, limites, CORS e bloqueio de caminhos externos. Não chama a IA nem altera os relatórios reais.
 Não rode Python com a opção `-O`, que desativa os `assert` dos testes.
 
 ## Parar, retomar e consultar falhas
@@ -252,9 +324,13 @@ A dashboard utiliza a porta 8088.
 Se o Docker não iniciar, confira se há espaço em disco e se o mecanismo Linux/WSL está disponível.
 Se a IA falhar, confira chave, nome do modelo e cota da conta; os serviços REST e a dashboard não dependem dela.
 
+Se `docker compose logs especialista` mostrar `APIConnectionError` e o ambiente fizer inspeção HTTPS, confira se a CA local está na cadeia confiável do contêiner. `docker-compose.tls.exemplo.yml` mostra um override opcional para `especialista` e `chat` (também usado pelo julgador). Use somente uma CA pública do ambiente que você confia, junto das CAs padrão. Guarde o bundle em `.venv/ca-runtime.pem` e a configuração ativa em `docker-compose.override.yml`, ambos locais. Esse ajuste deve manter a verificação TLS habilitada.
+
 ## Referências técnicas
 
 - [SDK oficial do MCP, versão 1.30.0](https://github.com/modelcontextprotocol/python-sdk/tree/v1.30.0)
 - [SDK oficial da OpenAI](https://github.com/openai/openai-python)
 - [Google: interface compatível com OpenAI](https://ai.google.dev/gemini-api/docs/openai)
 - [Claude: compatibilidade e limitações](https://platform.claude.com/docs/en/cli-sdks-libraries/libraries/openai-sdk)
+- [Ollama: API compatível com OpenAI](https://docs.ollama.com/api/openai-compatibility)
+- [Ollama: ferramentas com Qwen](https://docs.ollama.com/capabilities/tool-calling)

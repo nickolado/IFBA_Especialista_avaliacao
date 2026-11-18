@@ -50,12 +50,23 @@ INSERT INTO locacao.imoveis (descricao, bairro, tipo, quartos, valor_mensal) VAL
 ('Kitnet perto do campus', 'Universitário', 'kitnet', 1, 650),
 ('Apartamento com varanda', 'Centro', 'apartamento', 2, 1500),
 ('Casa térrea com garagem', 'Primavera', 'casa', 2, 1100),
-('Apartamento compacto', 'São José', 'apartamento', 1, 850);
+('Apartamento compacto', 'São José', 'apartamento', 1, 850),
+('Kitnet mobiliada próxima ao metrô', 'Centro', 'kitnet', 1, 950),
+('Apartamento amplo com suíte e sacada', 'Jardim América', 'apartamento', 3, 2100),
+('Casa espaçosa com área gourmet', 'Primavera', 'casa', 3, 1950),
+('Apartamento térreo com área externa', 'Universitário', 'apartamento', 2, 1150),
+('Studio moderno próximo às faculdades', 'Universitário', 'kitnet', 1, 780),
+('Casa duplex em rua arborizada', 'Jardim América', 'casa', 4, 2600);
 
 INSERT INTO locacao.pedidos (cliente, imovel_id, situacao) VALUES
 ('Ana Souza', 1, 'pendente'), ('Bruno Lima', 1, 'pendente'),
 ('Carla Santos', 2, 'aprovado'), ('Diego Alves', 3, 'concluido'),
-('Elisa Costa', 4, 'recusado'), ('Felipe Rocha', 5, 'cancelado');
+('Elisa Costa', 4, 'recusado'), ('Felipe Rocha', 5, 'cancelado'),
+('Gabriela Martins', 7, 'pendente'), ('Henrique Oliveira', 8, 'pendente'),
+('Isabela Ferreira', 9, 'concluido'), ('João Pedro Ribeiro', 10, 'cancelado'),
+('Larissa Mendes', 11, 'aprovado'), ('Marcos Vinícius Dias', 12, 'concluido');
 
-INSERT INTO locacao.avaliacoes (pedido_id, nota, comentario)
-VALUES (4, 5, 'Imóvel bem localizado e atendimento atencioso.');
+INSERT INTO locacao.avaliacoes (pedido_id, nota, comentario) VALUES
+(4, 5, 'Imóvel bem localizado e atendimento atencioso.'),
+(9, 4, 'Casa muito confortável e vizinhança tranquila, apenas o portão precisou de ajuste inicial.'),
+(12, 5, 'Excelente espaço para família grande, entrega das chaves foi rápida.');

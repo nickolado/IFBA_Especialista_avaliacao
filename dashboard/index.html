@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Locação Residencial</title>
+    <title>Locação Residencial v2</title>
     <link rel="stylesheet" href="estilo.css">
     <script src="painel.js" defer></script>
+    <script src="chat.js" defer></script>
 </head>
 <body>
 <header>
@@ -13,8 +14,23 @@
     <p>PAINEL DE ATENDIMENTO</p>
     <h1>Locação Residencial<span>.</span></h1>
     <div class="subtitulo">Imóveis, pedidos e a experiência de quem já alugou.</div>
+    <nav class="navegacao" aria-label="Navegação principal"><a href="index.html" aria-current="page">Atendimento</a><a href="julgador.html">Notas do julgador</a></nav>
 </header>
 <main>
+    <section class="painel" aria-labelledby="titulo-chat">
+        <div class="titulo">
+            <div><p>LOCAÇÃO RESIDENCIAL V2</p><h2 id="titulo-chat">Assistente de locação</h2></div>
+            <button type="button" id="nova-conversa">Nova conversa</button>
+        </div>
+        <p class="ajuda">Informe seu orçamento, bairro e número de quartos para encontrar imóveis disponíveis.</p>
+        <div id="conversa" role="log" aria-label="Mensagens do assistente" tabindex="0"></div>
+        <form id="form-chat">
+            <label class="largo">Sua mensagem<input id="mensagem-chat" required maxlength="1500" autocomplete="off"
+                placeholder="Ex.: Procuro um apartamento de 2 quartos até R$ 1.300 no Centro."></label>
+            <button id="enviar-chat">Enviar</button>
+        </form>
+        <p id="estado-chat" role="status"></p>
+    </section>
     <div class="faixa"><span>Visão geral da imobiliária</span><small>Atualização automática a cada 5 segundos</small></div>
     <section class="indicadores" aria-label="Resumo">
         <article><p>IMÓVEIS DISPONÍVEIS</p><strong id="total-imoveis">—</strong><small>prontos para uma nova locação</small></article>
@@ -61,7 +77,7 @@
             </form><p id="mensagem-avaliacao" role="status"></p>
         </details>
     </section>
-    <footer>Locação Residencial · Projeto acadêmico de SOA · Dados fictícios</footer>
+    <footer>Locação Residencial v2 · Projeto acadêmico · Dados fictícios</footer>
 </main>
 </body>
 </html>

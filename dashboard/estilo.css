@@ -9,6 +9,9 @@ header p { color: #c4d8b7; }
 h1 { font-size: clamp(30px, 4vw, 46px); margin: 12px 0; letter-spacing: -1.5px; }
 h1 span { color: #d7e997; }
 .subtitulo { color: #d4dfd9; font-size: 15px; }
+.navegacao { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+.navegacao a { display: inline-flex; align-items: center; min-height: 44px; padding: 10px 15px; color: #fff; border: 1px solid #658376; border-radius: 5px; text-decoration: none; font-size: 14px; }
+.navegacao a:hover, .navegacao a[aria-current="page"] { background: #e4efda; color: #173f35; border-color: #e4efda; }
 main { max-width: 1208px; padding: 25px 24px; margin: auto; }
 .faixa { display: flex; justify-content: space-between; gap: 15px; margin-bottom: 20px; font-size: 14px; }
 small, .ajuda { color: #586b62; font-size: 12px; }
@@ -46,6 +49,11 @@ button + button { margin-left: 5px; }
 :focus-visible { outline: 3px solid #ba8720; outline-offset: 3px; }
 footer { text-align: center; font-size: 12px; padding: 15px; color: #647268; }
 [role="status"] { font-size: 13px; }
+#conversa { display: grid; gap: 10px; max-height: 340px; overflow: auto; }
+#conversa:empty { display: none; }
+.mensagem-chat { max-width: min(720px, 100%); padding: 12px 16px; background: #f3f6f1; border-radius: 6px; }
+.mensagem-chat.usuario { justify-self: end; background: #e3efe5; }
+.mensagem-chat p { margin: 4px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 @media (max-width: 650px) {
     .indicadores { grid-template-columns: 1fr; gap: 10px; }
     .indicadores article { padding: 18px; }

@@ -83,7 +83,7 @@ services:
     profiles: ["chat"]
     stdin_open: true
     tty: true
-    environment:
+    environment: &ambiente-chat
       GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
       PROVEDOR_IA: ${PROVEDOR_IA:-openai}
       MODELO_IA: ${MODELO_IA:-}
@@ -94,6 +94,28 @@ services:
       MCP_IMOVEIS: http://imoveis-mcp:8000/mcp
       MCP_PEDIDOS: http://pedidos-mcp:8000/mcp
       MCP_AVALIACOES: http://avaliacoes-mcp:8000/mcp
+      MODELO_EMBEDDING: ${MODELO_EMBEDDING:-}
+      MODELO_JUIZ: ${MODELO_JUIZ:-}
+      PROVEDOR_JUIZ: ${PROVEDOR_JUIZ:-}
+      URL_JUIZ: ${URL_JUIZ:-}
+      CHAVE_API_JUIZ: ${CHAVE_API_JUIZ:-}
+      CACHE_ARQUIVO: /cache/respostas.sqlite3
+      CACHE_LIMIAR: ${CACHE_LIMIAR:-0.85}
+      CACHE_TTL: ${CACHE_TTL:-86400}
+    volumes:
+      - cache-especialista:/cache
+      - ./resultados:/aplicacao/resultados
+
+  especialista:
+    build: ./mcp
+    command: python chat_web.py
+    restart: unless-stopped
+    ports: ["127.0.0.1:8090:8090"]
+    environment: *ambiente-chat
+    volumes:
+      - cache-especialista:/cache
+      - ./resultados:/aplicacao/resultados
 
 volumes:
   dados-locacao:
+  cache-especialista:
